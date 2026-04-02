@@ -1,9 +1,10 @@
 import wordPool from './word-pool.js'
 import dragon from './dragon.js'
+import museum from './museum.js'
 
 const canvas = document.getElementById('canvas')
 const tabs = document.querySelectorAll('.tab')
-const experiments = { 'word-pool': wordPool, 'dragon': dragon }
+const experiments = { 'word-pool': wordPool, 'dragon': dragon, 'museum': museum }
 let currentName = 'word-pool'
 let current = null
 
@@ -30,4 +31,4 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(() => launch(currentName), 200)
 })
 
-launch('word-pool')
+launch('museum')

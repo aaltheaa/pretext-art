@@ -21,6 +21,39 @@ That idea — *treating text as a set of positioned, measurable units rather tha
 
 ## experiments
 
+### museum
+
+Three famous paintings — Mona Lisa, The Starry Night, Water Lilies — rendered entirely from words. Each painting is a grid of artist quotes, color-sampled from the real painting image, arranged so the combined palette recreates the original at a distance.
+
+Each word cell has a random surface tilt (-1 to 1) and a slight random rotation (±8°). An interactive light fixture above the painting lets you change the angle of light across the canvas. Words whose tilt faces the light become brighter; words angled away darken. This creates a texture-relief effect — the same text mosaic looks different under each of the five preset angles.
+
+**Controls:**
+- **Click the ceiling track** — 5 preset light positions from hard left to hard right
+- **Click the ball chain** (hanging from the right end of the track) — toggles the light off/on. The lamp dims, the cone disappears, and words render at flat base color
+- **With light off, click the painting** — switches to reading mode: words reflow into a proper paragraph across the painting area, using `ctx.measureText()` to word-wrap the artist's quotes to the painting width. Colors still reflect the underlying painting. Click again to return to the mosaic
+- **◀ prev / next ▶** — fades between paintings
+
+**How it's built:**
+
+Color pipeline: at startup each cell gets a color from a set of hand-authored fallback regions (specific zones like sky, hills, face — ordered specific-to-general with a catch-all). Concurrently, the real Wikimedia image loads into an offscreen 200px canvas; once ready, `getImageData` re-samples every cell in-place. The fallback means something always renders immediately; the image upgrade is invisible.
+
+Performance was the main challenge. With ~1800 cells per painting, `fillText` + canvas state switches at 60fps were expensive — especially on landscape paintings (Starry Night, Water Lilies) which have 2–3× more cells than the portrait Mona Lisa. The fixes:
+
+- **Adaptive cell count**: `MAX_CELLS = 1800` cap; cell size scales up proportionally so wider paintings don't explode the grid
+- **Stop-when-idle rAF**: the animation loop only runs while the light is moving or a fade is in progress — otherwise it stops entirely. A `scheduleFrame()` call on click restarts it
+- **`setTransform` instead of `save/restore`**: replacing per-cell `ctx.save()`/`ctx.restore()` with direct matrix calls eliminated ~4000 canvas state stack operations per frame
+- **Easing tuned**: light arm lerp factor of 0.35 gives a snappy feel without overshoot
+
+**Physics parameters:**
+| parameter | value | effect |
+|---|---|---|
+| `CELL_SIZE` | 13px base | grid density before adaptive scaling |
+| `MAX_CELLS` | 1800 | cap across all painting shapes |
+| `REPEL_RADIUS` (light) | cos alignment | tilt range ±π/4 against light angle |
+| arm easing | 0.35/frame | how quickly the fixture arm swings |
+
+---
+
 ### word pool
 
 Words are physical objects. Each word has a position, a velocity, and a mass implied by its width (measured via canvas). They drift around the canvas under gentle physics:
@@ -31,6 +64,8 @@ Words are physical objects. Each word has a position, a velocity, and a mass imp
 - **center pull** — a soft gravitational force keeps words from permanently drifting to the edges
 
 The word widths are measured once at startup using `ctx.measureText()` — the same mechanism pretext uses internally — and stored so the physics engine can treat each word as a rigid body with a known footprint.
+
+---
 
 ### dragon
 
@@ -61,6 +96,7 @@ No build step, no dependencies. Pure ES modules served as static files.
 index.html      tab shell, canvas element
 style.css       dark theme layout
 main.js         tab switching, resize handling
+museum.js       painting mosaic + light fixture experiment
 word-pool.js    word physics experiment
 dragon.js       dragon + reactive text experiment
 ```
