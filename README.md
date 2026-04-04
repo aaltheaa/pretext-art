@@ -86,6 +86,26 @@ The character layout mirrors what pretext's `layoutWithLines` does: wrap text to
 | `REPEL_STRENGTH` | 3.8 | how hard it pushes |
 | `SEG_SPACING` | 15px | length of each body segment |
 
+### bakery
+
+Nine pastries rendered as word mosaics on a dark counter surface. Each pastry is filled with vocabulary from its own world — a croissant is built from words like *laminate*, *feuilletage*, *proof*, *détrempe*; a canelé from *beeswax*, *mahogany*, *lacquer*, *Bordeaux*.
+
+Click any pastry to expand it. It animates to the left side of the canvas while a full recipe card fades in on the right: ingredients listed with quantities, followed by numbered steps. On narrow screens (under 550px) the layout switches to a single-column stack — pastry at the top, recipe below.
+
+Each shape is a distinct silhouette: a crescent arc for the croissant (outer bezier arch + concave inner belly meeting at tapered tips), a capsule for the pain au chocolat, a ridged circle for the canelé (20 alternating outer/inner radii), an oval for the almond croissant, a dome-plus-trapezoid for the muffin, and so on. The blueberry muffin's `colorAt` function uses two overlapping sine waves to scatter blue-purple blueberry patches across the dome against the golden batter base.
+
+**Controls:**
+- **Click a pastry** — expands with animation; recipe card fades in
+- **Click again** — collapses back to the grid
+
+**How it's built:**
+
+Two separate grids are pre-computed at startup: a mosaic grid for each pastry shape (word cells sampled inside the path via `isPointInPath`) and a recipe grid (word cells laid out in structured sections with hanging-indent line-wrapping). Both grids are rebuilt on resize.
+
+Recipe cards are structured data (`{ meta, ingredients[], steps[] }`), compiled into a flat segment list — headers at 13px bold, body at 11px normal with hanging indent for bullets and numbered steps. A single `fontWeight` field on each cell drives the font string in the draw loop.
+
+Shapes are hit-tested with a dedicated offscreen canvas using the `evenodd` fill rule, which makes the donut and bagel holes work correctly without any extra logic.
+
 ---
 
 ## how it's built
@@ -99,6 +119,7 @@ main.js         tab switching, resize handling
 museum.js       painting mosaic + light fixture experiment
 word-pool.js    word physics experiment
 dragon.js       dragon + reactive text experiment
+bakery.js       pastry mosaics + recipe card experiment
 ```
 
 Each experiment exports `{ start(canvas), stop() }`. `main.js` calls `stop()` on the current experiment before calling `start()` on the next, so animation loops and event listeners are always cleaned up.
