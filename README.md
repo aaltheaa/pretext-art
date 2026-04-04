@@ -23,7 +23,7 @@ That idea — *treating text as a set of positioned, measurable units rather tha
 
 ### museum
 
-Three famous paintings — Mona Lisa, The Starry Night, Water Lilies — rendered entirely from words. Each painting is a grid of artist quotes, color-sampled from the real painting image, arranged so the combined palette recreates the original at a distance.
+Paintings rendered entirely from words. Each painting is a grid of artist quotes, color-sampled from the real image, arranged so the combined palette recreates the original at a distance.
 
 Each word cell has a random surface tilt (-1 to 1) and a slight random rotation (±8°). An interactive light fixture above the painting lets you change the angle of light across the canvas. Words whose tilt faces the light become brighter; words angled away darken. This creates a texture-relief effect — the same text mosaic looks different under each of the five preset angles.
 
