@@ -1,10 +1,11 @@
 import wordPool from './word-pool.js'
 import dragon from './dragon.js'
 import museum from './museum.js'
+import bakery from './bakery.js'
 
 const canvas = document.getElementById('canvas')
 const tabs = document.querySelectorAll('.tab')
-const experiments = { 'word-pool': wordPool, 'dragon': dragon, 'museum': museum }
+const experiments = { 'word-pool': wordPool, 'dragon': dragon, 'museum': museum, 'bakery': bakery }
 let currentName = 'word-pool'
 let current = null
 
