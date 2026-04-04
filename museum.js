@@ -1,6 +1,6 @@
 // ── Constants ────────────────────────────────────────────────────────
 const FIXTURE_H = 72
-const NAV_H = 52
+const NAV_H = 64
 const CELL_SIZE = 13
 const LIGHT_PRESETS = [-50, -25, 0, 25, 50].map(d => d * Math.PI / 180)
 
@@ -94,6 +94,32 @@ const PAINTINGS = [
       { x1: 0,    y1: 0,    x2: 1,    y2: 1,    color: '#306050' },
     ],
   },
+  {
+    title: 'The Great Wave',
+    artist: 'Katsushika Hokusai',
+    year: '1831',
+    aspect: 1280 / 867,
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Tsunami_by_hokusai_19th_century.jpg/1280px-Tsunami_by_hokusai_19th_century.jpg',
+    words: [
+      'from','the','age','of','six','i','had','a','mania','for','drawing',
+      'the','shapes','of','things','at','fifty','i','had','published','a',
+      'universe','of','designs','but','all','i','have','produced','before',
+      'the','age','of','seventy','is','not','worth','taking','into','account',
+      'at','seventy','three','i','partly','understood','the','structure','of',
+      'animals','plants','birds','fishes','and','insects','at','ninety','i',
+      'will','enter','into','the','secret','of','things','at','one','hundred',
+      'and','ten','everything','every','dot','every','dash','will','live',
+    ],
+    fallback: [
+      { x1: 0.30, y1: 0.10, x2: 0.72, y2: 0.40, color: '#f0f4f8' },
+      { x1: 0.54, y1: 0.28, x2: 0.72, y2: 0.56, color: '#e8ece8' },
+      { x1: 0,    y1: 0,    x2: 1,    y2: 0.38, color: '#c8d8e8' },
+      { x1: 0,    y1: 0.60, x2: 0.38, y2: 1,    color: '#0a2860' },
+      { x1: 0.38, y1: 0.60, x2: 1,    y2: 1,    color: '#0a2058' },
+      { x1: 0,    y1: 0,    x2: 1,    y2: 0.72, color: '#1848a0' },
+      { x1: 0,    y1: 0,    x2: 1,    y2: 1,    color: '#1840a8' },
+    ],
+  },
 ]
 
 // ── Module-scope state ───────────────────────────────────────────────
@@ -153,7 +179,13 @@ function makeSamplerFromImage(img, painting) {
   off.width = W; off.height = H
   const octx = off.getContext('2d')
   octx.drawImage(img, 0, 0, W, H)
-  const data = octx.getImageData(0, 0, W, H).data
+  let data
+  try {
+    data = octx.getImageData(0, 0, W, H).data
+  } catch (e) {
+    // CORS failure — image loaded without CORS headers (e.g. browser cache)
+    return (nx, ny) => sampleFallback(painting, nx, ny)
+  }
   return function sample(nx, ny) {
     const px = clamp(Math.floor(nx * W), 0, W - 1)
     const py = clamp(Math.floor(ny * H), 0, H - 1)
@@ -417,7 +449,6 @@ function drawFixture(ctx, lo, lightAngle, lightTarget, lightOn) {
     ctx.arc(chainX, by, 2, 0, Math.PI * 2)
     ctx.stroke()
   }
-  // Pull ball
   const pullY = trackY + ballLinks * linkSpacing + 5
   ctx.save()
   ctx.shadowColor = lightOn ? 'rgba(255, 245, 160, 0.6)' : 'rgba(100, 95, 80, 0.4)'
@@ -429,23 +460,69 @@ function drawFixture(ctx, lo, lightAngle, lightTarget, lightOn) {
   ctx.restore()
 }
 
-function drawNav(ctx, lo, idx, alpha) {
+function drawNav(ctx, lo, idx, alpha, readingMode) {
   const p = PAINTINGS[idx]
-  const navY = lo.lh - NAV_H / 2
+  const navTop = lo.lh - NAV_H
+  const titleY = navTop + 18
+  const controlY = navTop + 46
 
+  // Title row
   ctx.globalAlpha = alpha
   ctx.font = 'italic 13px Georgia, serif'
   ctx.fillStyle = 'rgba(220, 215, 200, 0.85)'
   ctx.textAlign = 'center'
-  ctx.fillText(`${p.title}  —  ${p.artist},  ${p.year}`, lo.lw / 2, navY - 6)
+  ctx.fillText(`${p.title}  —  ${p.artist},  ${p.year}`, lo.lw / 2, titleY)
 
+  // Prev / next
   ctx.globalAlpha = 1
   ctx.font = '12px Georgia, serif'
   ctx.fillStyle = 'rgba(190, 185, 170, 0.65)'
   ctx.textAlign = 'left'
-  ctx.fillText('◀  prev', lo.lw * 0.10, navY + 14)
+  ctx.fillText('◀  prev', lo.lw * 0.10, controlY)
   ctx.textAlign = 'right'
-  ctx.fillText('next  ▶', lo.lw * 0.90, navY + 14)
+  ctx.fillText('next  ▶', lo.lw * 0.90, controlY)
+  ctx.textAlign = 'left'
+
+  // Mode toggle pill
+  const pillW = 110, pillH = 24, pillR = 12
+  const pillX = lo.lw / 2 - pillW / 2
+  const pillY = controlY - pillH / 2 - 4
+
+  // Pill border
+  ctx.strokeStyle = 'rgba(200, 190, 165, 0.35)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.roundRect(pillX, pillY, pillW, pillH, pillR)
+  ctx.stroke()
+
+  // Active half fill
+  ctx.save()
+  ctx.beginPath()
+  ctx.roundRect(pillX, pillY, pillW, pillH, pillR)
+  ctx.clip()
+  ctx.fillStyle = 'rgba(255, 245, 160, 0.15)'
+  if (!readingMode) {
+    ctx.fillRect(pillX, pillY, pillW / 2, pillH)
+  } else {
+    ctx.fillRect(pillX + pillW / 2, pillY, pillW / 2, pillH)
+  }
+  ctx.restore()
+
+  // Divider
+  ctx.strokeStyle = 'rgba(200, 190, 165, 0.25)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(lo.lw / 2, pillY + 4)
+  ctx.lineTo(lo.lw / 2, pillY + pillH - 4)
+  ctx.stroke()
+
+  // Labels
+  ctx.font = '11px Georgia, serif'
+  ctx.textAlign = 'center'
+  ctx.fillStyle = !readingMode ? 'rgba(255, 245, 160, 0.95)' : 'rgba(180, 175, 155, 0.45)'
+  ctx.fillText('light', pillX + pillW / 4, pillY + pillH / 2 + 4)
+  ctx.fillStyle = readingMode ? 'rgba(255, 245, 160, 0.95)' : 'rgba(180, 175, 155, 0.45)'
+  ctx.fillText('read', pillX + pillW * 3 / 4, pillY + pillH / 2 + 4)
   ctx.textAlign = 'left'
   ctx.globalAlpha = 1
 }
@@ -484,29 +561,12 @@ export default {
       const cx = (e.clientX - rect.left) * (lw / rect.width)
       const cy = (e.clientY - rect.top) * (lh / rect.height)
 
-      // Ball chain hit test (hangs from right end of track)
-      const trackR = layout.paintX + layout.paintFitW - 20
-      const chainX = trackR + 12
+      // Ball chain hit test
+      const trackR0 = layout.paintX + layout.paintFitW - 20
+      const chainX = trackR0 + 12
       const pullY = FIXTURE_H * 0.6
       if (Math.hypot(cx - chainX, cy - pullY) < 16) {
         lightOn = !lightOn
-        if (!lightOn) readingMode = false  // reset reading mode when turning back on
-        scheduleFrame()
-        return
-      }
-
-      // Fixture zone — find nearest preset tick (only when light is on)
-      if (cy < FIXTURE_H && lightOn) {
-        const trackL = layout.paintX + 20
-        let nearest = LIGHT_PRESETS[0]
-        let minDist = Infinity
-        for (let i = 0; i < LIGHT_PRESETS.length; i++) {
-          const frac = i / (LIGHT_PRESETS.length - 1)
-          const tx = trackL + frac * (trackR - trackL)
-          const d = Math.abs(cx - tx)
-          if (d < minDist) { minDist = d; nearest = LIGHT_PRESETS[i] }
-        }
-        lightTarget = nearest
         scheduleFrame()
         return
       }
@@ -520,8 +580,37 @@ export default {
         return
       }
 
+      // Fixture zone — find nearest preset tick (only when light is on)
+      if (cy < FIXTURE_H && lightOn) {
+        const trackL = layout.paintX + 20
+        const trackR = layout.paintX + layout.paintFitW - 20
+        let nearest = LIGHT_PRESETS[0]
+        let minDist = Infinity
+        for (let i = 0; i < LIGHT_PRESETS.length; i++) {
+          const frac = i / (LIGHT_PRESETS.length - 1)
+          const tx = trackL + frac * (trackR - trackL)
+          const d = Math.abs(cx - tx)
+          if (d < minDist) { minDist = d; nearest = LIGHT_PRESETS[i] }
+        }
+        lightTarget = nearest
+        scheduleFrame()
+        return
+      }
+
       // Nav zone
       if (cy > lh - NAV_H) {
+        // Mode toggle pill
+        const pillW = 110, pillH = 24
+        const pillX = lw / 2 - pillW / 2
+        const navTop = lh - NAV_H
+        const controlY = navTop + 46
+        const pillY = controlY - pillH / 2 - 4
+        if (cx >= pillX && cx <= pillX + pillW && cy >= pillY && cy <= pillY + pillH) {
+          readingMode = cx > lw / 2
+          lightOn = !readingMode
+          scheduleFrame()
+          return
+        }
         if (cx < lw * 0.35) { startTransition((currentIdx - 1 + PAINTINGS.length) % PAINTINGS.length); scheduleFrame() }
         if (cx > lw * 0.65) { startTransition((currentIdx + 1) % PAINTINGS.length); scheduleFrame() }
       }
@@ -553,7 +642,7 @@ export default {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.globalAlpha = 1
       drawFixture(ctx, layout, lightAngle, lightTarget, lightOn)
-      drawNav(ctx, layout, currentIdx, fadeAlpha)
+      drawNav(ctx, layout, currentIdx, fadeAlpha, readingMode)
     }
 
     // Animation loop
