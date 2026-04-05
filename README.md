@@ -106,6 +106,27 @@ Recipe cards are structured data (`{ meta, ingredients[], steps[] }`), compiled 
 
 Shapes are hit-tested with a dedicated offscreen canvas using the `evenodd` fill rule, which makes the donut and bagel holes work correctly without any extra logic.
 
+### binary
+
+A dense wall of falling 0s and 1s in Matrix green. The curtain is full from frame 1 — no empty canvas at startup.
+
+**Rain mode** (default): Each column has a falling drop with a brightness trail that decays per frame. Moving the cursor creates velocity-driven waves through nearby characters — only characters physically close to the cursor in 2D are affected, not whole columns. Fast sweeps make larger waves.
+
+**Page mode** (click to enter): The entire canvas switches to a static grid of binary digits. The cursor repels nearby characters which fly outward and spring back, with color scaling from dim green at rest to bright green when displaced. Click again to return to rain.
+
+**Controls:**
+- **Move cursor** — in rain mode, pushes nearby characters horizontally like a bead curtain; in page mode, continuously repels characters within the cursor radius
+- **Click** — toggles between rain mode and page mode
+
+**Physics parameters:**
+| parameter | value | effect |
+|---|---|---|
+| `DECAY` | 0.96 | brightness trail length per column |
+| `RAIN_R` | 60px | cursor wave radius in rain mode |
+| `PAGE_REPEL_R` | 55px | cursor repulsion radius in page mode |
+| `PAGE_SPRING` | 0.08 | how quickly characters return to base |
+| `PAGE_DAMP` | 0.72 | damping — higher = faster settle |
+
 ---
 
 ## how it's built
@@ -120,6 +141,7 @@ museum.js       painting mosaic + light fixture experiment
 word-pool.js    word physics experiment
 dragon.js       dragon + reactive text experiment
 bakery.js       pastry mosaics + recipe card experiment
+binary.js       matrix rain + page impact experiment
 ```
 
 Each experiment exports `{ start(canvas), stop() }`. `main.js` calls `stop()` on the current experiment before calling `start()` on the next, so animation loops and event listeners are always cleaned up.
