@@ -3,10 +3,11 @@ import dragon from './dragon.js'
 import museum from './museum.js'
 import bakery from './bakery.js'
 import binary from './binary.js'
+import motivation from './motivation.js'
 
 const canvas = document.getElementById('canvas')
 const tabs = document.querySelectorAll('.tab')
-const experiments = { 'word-pool': wordPool, 'dragon': dragon, 'museum': museum, 'bakery': bakery, 'binary': binary }
+const experiments = { 'word-pool': wordPool, 'dragon': dragon, 'museum': museum, 'bakery': bakery, 'binary': binary, 'motivation': motivation }
 let currentName = 'word-pool'
 let current = null
 

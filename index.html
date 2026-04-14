@@ -15,9 +15,18 @@
       <button class="tab" data-tab="binary">binary</button>
       <button class="tab" data-tab="word-pool">word pool</button>
       <button class="tab" data-tab="dragon">dragon</button>
+      <button class="tab" data-tab="motivation">motivation</button>
     </nav>
   </header>
-  <canvas id="canvas"></canvas>
+  <div class="canvas-wrapper">
+    <canvas id="canvas"></canvas>
+    <div id="motivation-overlay" class="motivation-overlay hidden">
+      <div class="motivation-quote">
+        <p class="motivation-text"></p>
+        <p class="motivation-author"></p>
+      </div>
+    </div>
+  </div>
   <script type="module" src="main.js"></script>
 </body>
 </html>
