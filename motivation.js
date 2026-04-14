@@ -41,7 +41,7 @@ const PALETTES = [
   { hues: [40,  300, 60],  sat: [60, 60, 65] },  // amber / violet / gold
 ]
 
-const PALETTE_SECS = 14   // seconds per palette crossfade
+const PALETTE_SECS = 30   // seconds per palette crossfade
 const QUOTE_INTERVAL = 10000  // ms between auto-advances
 
 export default {
@@ -80,11 +80,11 @@ export default {
 
     // ── Aurora bands ────────────────────────────────────────────────────────
     const BANDS = [
-      { yf: 0.22, amp: 0.18, spd: 0.00040, ph: 0.0,  wf: 0.55, al: 0.22, hi: 0 },
-      { yf: 0.45, amp: 0.22, spd: 0.00030, ph: 3.14, wf: 0.70, al: 0.18, hi: 1 },
-      { yf: 0.65, amp: 0.16, spd: 0.00050, ph: 1.20, wf: 0.60, al: 0.20, hi: 2 },
-      { yf: 0.35, amp: 0.12, spd: 0.00035, ph: 2.10, wf: 0.45, al: 0.13, hi: 0 },
-      { yf: 0.55, amp: 0.20, spd: 0.00025, ph: 0.80, wf: 0.65, al: 0.15, hi: 1 },
+      { yf: 0.22, amp: 0.14, spd: 0.0000060, ph: 0.0,  wf: 0.55, al: 0.22, hi: 0 },
+      { yf: 0.45, amp: 0.17, spd: 0.0000045, ph: 3.14, wf: 0.70, al: 0.18, hi: 1 },
+      { yf: 0.65, amp: 0.13, spd: 0.0000070, ph: 1.20, wf: 0.60, al: 0.20, hi: 2 },
+      { yf: 0.35, amp: 0.10, spd: 0.0000052, ph: 2.10, wf: 0.45, al: 0.13, hi: 0 },
+      { yf: 0.55, amp: 0.16, spd: 0.0000035, ph: 0.80, wf: 0.65, al: 0.15, hi: 1 },
     ]
 
     function drawAurora(hues, sats) {
@@ -111,7 +111,7 @@ export default {
         ctx.beginPath()
         ctx.moveTo(0, cy - h / 2)
         for (let i = 0; i < segs; i++) {
-          const wave = (off) => Math.sin(t * b.spd * 800 + b.ph + (i + off) * 0.9) * lh * 0.035
+          const wave = (off) => Math.sin(t * b.spd * 800 + b.ph + (i + off) * 0.9) * lh * 0.018
           ctx.bezierCurveTo(
             (i + 0.33) * sw, cy - h / 2 + wave(0.33),
             (i + 0.66) * sw, cy - h / 2 + wave(0.66),
@@ -120,7 +120,7 @@ export default {
         }
         ctx.lineTo(lw, cy + h / 2)
         for (let i = segs; i > 0; i--) {
-          const wave = (off) => Math.sin(t * b.spd * 600 + b.ph + (i - off) * 0.75) * lh * 0.035
+          const wave = (off) => Math.sin(t * b.spd * 600 + b.ph + (i - off) * 0.75) * lh * 0.018
           ctx.bezierCurveTo(
             (i - 0.33) * sw, cy + h / 2 + wave(0.33),
             (i - 0.66) * sw, cy + h / 2 + wave(0.66),
@@ -139,8 +139,8 @@ export default {
       xf:  0.15 + Math.random() * 0.7,
       yf:  0.15 + Math.random() * 0.7,
       r:   110  + Math.random() * 190,
-      sxf: (0.00010 + Math.random() * 0.00014) * (Math.random() < 0.5 ? 1 : -1),
-      syf: (0.00008 + Math.random() * 0.00012) * (Math.random() < 0.5 ? 1 : -1),
+      sxf: (0.0000015 + Math.random() * 0.0000020) * (Math.random() < 0.5 ? 1 : -1),
+      syf: (0.0000012 + Math.random() * 0.0000018) * (Math.random() < 0.5 ? 1 : -1),
       ph:  Math.random() * Math.PI * 2,
       al:  0.06 + Math.random() * 0.08,
       hi:  i % 3,
@@ -169,7 +169,7 @@ export default {
       x:   Math.random() * (canvas.width  || 800),
       y:   Math.random() * (canvas.height || 600),
       sz:  0.5 + Math.random() * 2.2,
-      spd: 0.0008 + Math.random() * 0.0022,
+      spd: 0.00025 + Math.random() * 0.00055,
       ph:  Math.random() * Math.PI * 2,
       hi:  Math.floor(Math.random() * 3),
     }))
@@ -213,7 +213,7 @@ export default {
       const sats = curSats()
 
       // Soft motion-blur trail: dark semi-transparent fill instead of clearRect
-      ctx.fillStyle = 'rgba(7, 5, 16, 0.20)'
+      ctx.fillStyle = 'rgba(7, 5, 16, 0.07)'
       ctx.fillRect(0, 0, lw, lh)
 
       drawAurora(hues, sats)
