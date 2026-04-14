@@ -106,6 +106,28 @@ Recipe cards are structured data (`{ meta, ingredients[], steps[] }`), compiled 
 
 Shapes are hit-tested with a dedicated offscreen canvas using the `evenodd` fill rule, which makes the donut and bagel holes work correctly without any extra logic.
 
+### motivation
+
+A full-screen aurora backdrop with cycling motivational quotes by women. The background is three layered canvas effects running simultaneously: slow-drifting aurora ribbon bands, soft floating light orbs, and a field of twinkling sparkles. The whole scene breathes through four colour palettes — violet/teal/magenta, rose/purple, cyan/blue/mint, amber/gold — crossfading one into the next over 30 seconds each.
+
+21 quotes by Eleanor Roosevelt, Maya Angelou, Joan of Arc, Brené Brown, Chimamanda Ngozi Adichie, Rosa Parks, Malala Yousafzai, and others cycle on screen with a 1.8-second fade between each. Themes run through self-belief, not making yourself small, strength under pressure, and self-compassion. Click anywhere on the canvas to skip to the next quote.
+
+**Controls:**
+- **Click anywhere** — advance to the next quote immediately (resets the auto-timer)
+- Quotes also cycle automatically every 10 seconds
+
+**How it's built:**
+
+The aurora uses five bezier ribbon bands, each a closed path drawn with `bezierCurveTo` across 7 segments. Both the band's vertical centre and the ripple of the edge curves are driven by `Math.sin(t * spd + phase)` — with speeds tuned to 15–40 second oscillation cycles so the movement is barely perceptible. The gradient along each band fades to transparent at the top and bottom edges, so bands layer softly without hard lines.
+
+Instead of `ctx.clearRect` each frame, the draw loop lays down a near-opaque dark fill (`rgba(7, 5, 16, 0.07)`). This means previous frames persist with slight decay — aurora trails linger and shimmer rather than snapping clean every frame.
+
+Colour palettes are three-hue arrays. Each frame lerps current hues and saturations toward the next palette's values, taking the shortest path around the hue wheel to avoid passing through grey. Orbs are radial gradients on elliptical drift paths with ~60-second cycles. Sparkles twinkle via `Math.abs(Math.sin(t * spd + phase))^2.2` — the exponent sharpens the twinkle so stars are mostly dim with brief bright flashes, rather than a uniform pulse.
+
+Quote display uses a DOM overlay (not canvas) so text wraps correctly at any viewport size. CSS `transition: opacity 1.8s ease` on the `.motivation-quote` element handles the fades. A `requestAnimationFrame` double-tick after swapping text content ensures the browser has painted before the visible class is added.
+
+---
+
 ### binary
 
 A dense wall of falling 0s and 1s in Matrix green. The curtain is full from frame 1 — no empty canvas at startup.
@@ -142,6 +164,7 @@ word-pool.js    word physics experiment
 dragon.js       dragon + reactive text experiment
 bakery.js       pastry mosaics + recipe card experiment
 binary.js       matrix rain + page impact experiment
+motivation.js   aurora background + motivational quotes
 ```
 
 Each experiment exports `{ start(canvas), stop() }`. `main.js` calls `stop()` on the current experiment before calling `start()` on the next, so animation loops and event listeners are always cleaned up.
