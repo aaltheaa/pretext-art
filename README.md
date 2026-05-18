@@ -106,6 +106,30 @@ Recipe cards are structured data (`{ meta, ingredients[], steps[] }`), compiled 
 
 Shapes are hit-tested with a dedicated offscreen canvas using the `evenodd` fill rule, which makes the donut and bagel holes work correctly without any extra logic.
 
+### heids
+
+Nine floating ceramic heads — inspired by the *Floating Heads* sculpture at Kelvingrove Art Gallery & Museum in Glasgow. Each heid is a word-sculpture hanging from a thread of characters, slowly rotating in space and expressing one of six emotions: **surprise**, **sad**, **happy**, **angry**, **laugh**, **smirk**.
+
+The heads are built entirely from text. Every cell on the surface of the sphere is a word or character drawn at a size and brightness determined by how close it is to the front face — words at the center catch the light and appear large; words curving away toward the back shrink and dim, exactly like a white ceramic object under ambient light. The effect is that you can read the 3D volume of the head from the word-size gradient alone.
+
+Each expression is traced anatomically: eyebrow arcs (angled \/ for angry, /\ for sad, high arched for surprise), eye circles (wide-open for surprise, nearly shut for laugh, narrow slits for angry), nose bridge + nostrils, and mouth curves (bottom arc for smile, top arc for frown, open circle for surprise, very wide for laugh, one-sided for smirk). These feature curves are drawn on top of a sparser background fill that gives each head its volume and shape.
+
+The heads sway and bob gently on their threads, and each one rotates at its own speed and direction — some clockwise, some counter — so you see all angles of each expression over time.
+
+**How it's built:**
+
+Each head stores its surface cells in spherical UV coordinates — latitude and longitude angles rather than 3D Cartesian points. When the head rotates around its Y axis, only the longitude changes: `sinPhiR = sinPhi·cosθ + cosPhi·sinθ`. This means the oval silhouette stays intact at every rotation angle (no crescent-moon distortion).
+
+Perspective projection (`pScale = 1 / (1 − z3dR · 0.32)`) makes the front of the head appear ~47% larger than the profile edges. Combined with font-size scaling (`0.30–1.40×` of base size by depth), this produces the sculptural read without any lighting model.
+
+Cells are painter-sorted back-to-front each frame and drawn with a continuous depth gradient: alpha from 0.45 (back) to 0.95 (front), lightness from ~52% to ~95%. This keeps the back hemisphere visible as light gray rather than disappearing, matching how a white ceramic object looks under ambient light.
+
+Performance: background cells (the volume fill) are drawn with one shared canvas transform per head per frame — no per-cell `setTransform`. Only the ~155 feature-anatomy cells use per-cell transforms for their slight rotations. Scratch buffers (`Float32Array`) are pre-allocated at startup and reused every frame so the draw loop makes no heap allocations. At 9 heads this keeps the animation at 60fps.
+
+Feature curves are placed using two parametric helpers: `sampleArc` (words evenly spaced along an elliptical arc) and `sampleLine` (words along a line segment), each with small random jitter so the curves feel hand-drawn rather than mechanical.
+
+---
+
 ### motivation
 
 A full-screen aurora backdrop with cycling motivational quotes by women. The background is three layered canvas effects running simultaneously: slow-drifting aurora ribbon bands, soft floating light orbs, and a field of twinkling sparkles. The whole scene breathes through four colour palettes — violet/teal/magenta, rose/purple, cyan/blue/mint, amber/gold — crossfading one into the next over 30 seconds each.
@@ -165,6 +189,7 @@ dragon.js       dragon + reactive text experiment
 bakery.js       pastry mosaics + recipe card experiment
 binary.js       matrix rain + page impact experiment
 motivation.js   aurora background + motivational quotes
+heids.js        floating word-sculpture heads experiment
 ```
 
 Each experiment exports `{ start(canvas), stop() }`. `main.js` calls `stop()` on the current experiment before calling `start()` on the next, so animation loops and event listeners are always cleaned up.
